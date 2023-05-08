@@ -23,6 +23,8 @@ else:
     app_base_folder = pathlib.Path(__file__).parent
     # If frontend/build does not exist, run `npm run build`
     if not app_base_folder.joinpath("frontend/build").exists():
+        subprocess.run(["sudo", "apt", "install", "nodejs"], cwd=str(app_base_folder / "frontend"))
+        subprocess.run(["sudo", "apt", "install", "npm"], cwd=str(app_base_folder / "frontend"))
         subprocess.run(["npm", "install"], cwd=str(app_base_folder / "frontend"))
         subprocess.run(["npm", "run", "build"], cwd=str(app_base_folder / "frontend"))
 
