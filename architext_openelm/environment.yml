@@ -1,16 +1,18 @@
 name: architext
 channels:
   - conda-forge
+  - pytorch
   - defaults
 dependencies:
   - python=3.10
-  - git+https://github.com/CarperAI/OpenELM.git
-  - torch
+  - pip:
+    - "--editable=git+https://github.com/CarperAI/OpenELM.git"
+  - pytorch
   - shapely
   - numpy
   - networkx
   - transformers
-  - hydra-core>=1.2.0
+  - hydra-core
   - Pillow
   - openai
   - nodejs
