@@ -6,7 +6,7 @@ channels:
 dependencies:
   - python=3.10
   - pip
-  - box2d
+  - box2d-py
   - pip:
     - "-r requirements.txt"
   - nodejs
