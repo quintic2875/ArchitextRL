@@ -53,13 +53,6 @@ try:
 except:
     cfg = OmegaConf.load("architext_openelm/config/architext_gpt3.5_cfg.yaml")
 
-# Get the folder of the current file
-app_base_folder = pathlib.Path(__file__).parent
-# If frontend/build does not exist, run `npm run build`
-if not app_base_folder.joinpath("frontend/build").exists():
-    subprocess.run(["npm", "install"], cwd=str(app_base_folder / "frontend"))
-    subprocess.run(["npm", "run", "build"], cwd=str(app_base_folder / "frontend"))
-
 
 WIDTH, HEIGHT, Y_STEP = 5, 5, 0.1
 st.session_state.setdefault("x_start", 0)
