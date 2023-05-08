@@ -25,8 +25,9 @@ else:
     if not app_base_folder.joinpath("frontend/build").exists():
         #subprocess.run(["sudo", "apt", "install", "nodejs"], cwd=str(app_base_folder / "frontend"))
         #subprocess.run(["sudo", "apt", "install", "npm"], cwd=str(app_base_folder / "frontend"))
-        subprocess.run(["curl", "-o-", "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh", "|", "bash"],
+        subprocess.run(["curl", "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh", "--output", "i.sh"],
                        cwd=str(app_base_folder / "frontend"))
+        subprocess.run(["bash", "i.sh"], cwd=str(app_base_folder / "frontend"))
         subprocess.run(["nvm", "install", "node"], cwd=str(app_base_folder / "frontend"))
         subprocess.run(["npm", "install"], cwd=str(app_base_folder / "frontend"))
         subprocess.run(["npm", "run", "build"], cwd=str(app_base_folder / "frontend"))
