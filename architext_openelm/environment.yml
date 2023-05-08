@@ -5,6 +5,8 @@ channels:
   - defaults
 dependencies:
   - python=3.10
+  - pip
+  - box2d
   - pip:
     - "-r requirements.txt"
   - nodejs
