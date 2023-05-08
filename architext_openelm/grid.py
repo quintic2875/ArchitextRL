@@ -30,10 +30,7 @@ else:
         subprocess.run(["bash", "i.sh"], cwd=str(app_base_folder / "frontend"))
         #subprocess.run(["source", "~/.nvm/nvm.sh"], cwd=str(app_base_folder / "frontend"))
         #subprocess.run(["export", "NVM_DIR=\"$HOME/.nvm\""], cwd=str(app_base_folder / "frontend"))
-
-        subprocess.run(["nvm", "install", "node"], cwd=str(app_base_folder / "frontend"), shell=True, executable='/bin/bash')
-        subprocess.run(["npm", "install"], cwd=str(app_base_folder / "frontend"), shell=True, executable='/bin/bash')
-        subprocess.run(["npm", "run", "build"], cwd=str(app_base_folder / "frontend"), shell=True, executable='/bin/bash')
+        subprocess.Popen(["bash", "build.sh"], cwd=str(app_base_folder))
 
     _component_func = components.declare_component(
         "st_grid", path=build_dir
