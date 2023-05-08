@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 logs/
 .pkl
+node_modules/
+sessions/

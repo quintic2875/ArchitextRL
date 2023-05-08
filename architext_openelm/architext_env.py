@@ -4,7 +4,6 @@ from omegaconf import DictConfig, OmegaConf
 from typing import List
 from architext_genotype import ArchitextGenotype
 from model import build_default_mutation_model
-from model import ArchitextPromptMutation
 from openelm.mutation_model import PromptModel
 from openelm.environments import ENVS_DICT
 

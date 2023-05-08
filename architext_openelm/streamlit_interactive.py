@@ -1,46 +1,199 @@
+import pathlib
+import random
+
 import streamlit as st
-from st_clickable_images import clickable_images
-from os import listdir
-from pathlib import Path
+from PIL import Image
+from grid import st_grid
+import io
 import base64
+import os
+import pickle
 
-def img_to_bytes(img_path):
-    img_bytes = Path(img_path).read_bytes()
+from omegaconf import OmegaConf
+
+from run_elm import ArchitextELM
+
+
+def img_process(img_bytes):
     encoded_img = base64.b64encode(img_bytes).decode()
-    return encoded_img
+    return f"data:image/jpeg;base64,{encoded_img}"
 
-def make_grid(cols,rows):
-    grid = [0]*cols
-    for i in range(cols):
-        with st.container():
-            grid[i] = st.columns(rows)
-    return grid
 
-directory = r'images\\'
-files = listdir(directory)
-enc_images = []
+def image_to_byte_array(image:Image):
+  imgByteArr = io.BytesIO()
+  image.save(imgByteArr, format="jpeg")
+  imgByteArr = imgByteArr.getvalue()
+  return imgByteArr
 
-for file in files:
-    enc_images.append(f"data:image/jpeg;base64,{img_to_bytes(f'{directory}{file}')}")
 
-clicked = clickable_images(
-    enc_images,
-    titles=[f"Image #{str(i)}" for i in range(len(enc_images))],
-    div_style={"display": "flex", "justify-content": "center", "flex-wrap": "wrap"},
-    img_style={"margin": "5px", "height": "200px"},
-)
+def get_imgs(elm_obj):
+    dims = elm_obj.dims
+    result = []
+    for i in range(dims[0]):
+        for j in range(dims[1]):
+            if elm_obj[i, j] == 0.0:
+                img = Image.new('RGB', (256, 256), color=(255, 255, 255))
+            else:
+                img = elm_obj[i, j].get_image()
+            result.append(img)
 
-st.markdown(f"Image #{clicked} clicked" if clicked > -1 else "No image clicked")
+    return result
 
-if clicked != "":
-    change_query = False
-    if "last_clicked" not in st.session_state:
-        st.session_state["last_clicked"] = clicked
-        change_query = True
+
+def get_blank_grid():
+    return [Image.new('RGB', (256, 256), color=(255, 255, 255)) for _ in range(WIDTH * HEIGHT)]
+
+
+typologies = ["1b1b", "2b1b", "2b2b", "3b1b", "3b2b", "3b3b", "4b1b", "4b2b", "4b3b", "4b4b"]
+
+# Initialize variables and state variables
+cfg = OmegaConf.load("config/architext_gpt3.5_cfg.yaml")
+WIDTH, HEIGHT, Y_STEP = 5, 5, 0.1
+st.session_state.setdefault("x_start", 0)
+st.session_state.setdefault("y_start", 1.0)
+st.session_state.setdefault("session_id",
+                            "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789") for _ in range(5)]))
+st.session_state.setdefault("elm_imgs",
+                            [get_blank_grid()]
+                            )
+st.session_state.setdefault("elm_obj", None)
+
+# create folder sessions/ if not exist
+if not os.path.exists("sessions"):
+    os.makedirs("sessions")
+session_loc = "sessions/" + st.session_state["session_id"] + ".pkl"
+if os.path.exists(session_loc):
+    with open(session_loc, "rb") as f:
+        loaded_state = pickle.load(f)
+        st.session_state.update(loaded_state)
+
+
+def run_elm(api_key: str, init_step: float, mutate_step: float, batch_size: float):
+    init_step = int(init_step)
+    mutate_step = int(mutate_step)
+    batch_size = int(batch_size)
+
+    os.environ["OPENAI_API_KEY"] = api_key
+
+    if st.session_state["elm_obj"] is None:
+        st.session_state["elm_obj"] = ArchitextELM(cfg)
+    elm_obj = st.session_state["elm_obj"]
+
+    elm_obj.cfg.evo_init_steps = init_step
+    elm_obj.cfg.evo_n_steps = init_step + mutate_step
+    elm_obj.environment.batch_size = batch_size
+    elm_obj.map_elites.env.batch_size = batch_size
+    elm_obj.run()
+    if "elm_imgs" in st.session_state:
+        st.session_state["elm_imgs"].append(get_imgs(elm_obj.map_elites.genomes))
     else:
-        if clicked != st.session_state["last_clicked"]:
-            st.session_state["last_clicked"] = clicked
-            change_query = True
-    if change_query:
-        # do something here
-        st.experimental_rerun()
+        st.session_state["elm_imgs"] = [get_imgs(elm_obj.map_elites.genomes)]
+
+
+def save():
+    if st.session_state["elm_obj"] is None:
+        return
+    elm_obj = st.session_state["elm_obj"]
+    with open(f'recycled.pkl', 'wb') as f:
+        pickle.dump(elm_obj.map_elites.recycled, f)
+    with open(f'map.pkl', 'wb') as f:
+        pickle.dump(elm_obj.map_elites.genomes, f)
+    with open(f'history.pkl', 'wb') as f:
+        pickle.dump(elm_obj.map_elites.history, f)
+
+
+def load(api_key):
+    os.environ["OPENAI_API_KEY"] = api_key
+    with open(f'recycled.pkl', 'rb') as f:
+        recycled = pickle.load(f)
+    with open(f'map.pkl', 'rb') as f:
+        genomes = pickle.load(f)
+    with open(f'history.pkl', 'rb') as f:
+        history = pickle.load(f)
+    st.session_state["elm_obj"] = ArchitextELM(cfg)
+
+    elm_obj = st.session_state["elm_obj"]
+    elm_obj.map_elites.recycled = recycled
+    elm_obj.map_elites.genomes = genomes
+    # todo: populate the nonzero attribute
+    elm_obj.map_elites.history = history
+
+    st.session_state["elm_imgs"] = [get_imgs(elm_obj.map_elites.genomes)]
+
+
+def recenter():
+    last_clicked = st.session_state.get("last_clicked", -1)
+    print(last_clicked)
+    if last_clicked < 0 or last_clicked >= WIDTH * HEIGHT:
+        return
+
+    last_x = last_clicked % WIDTH
+    last_y = last_clicked // WIDTH
+
+    new_x_start = min(len(typologies) - WIDTH, max(0, last_x + st.session_state["x_start"] - WIDTH // 2))
+    new_y_start = st.session_state["y_start"] + Y_STEP * (last_y - HEIGHT // 2)
+
+    new_x = last_x - new_x_start + st.session_state["x_start"]
+    new_y = HEIGHT // 2
+
+    st.session_state["x_start"] = new_x_start
+    st.session_state["y_start"] = new_y_start
+
+    st.session_state["last_clicked"] = new_y * WIDTH + new_x
+
+
+st.set_page_config(layout="wide")
+col1, col2 = st.columns([3, 12])
+
+with col1:
+    api_key = st.text_input("OpenAI API")
+    init_step = st.number_input("Init Step", value=1)
+    mutate_step = st.number_input("Mutate Step", value=1)
+    batch_size = st.number_input("Batch Size", value=2)
+    if len(st.session_state["elm_imgs"]) > 1:
+        slider_index = st.slider("Step", 0,
+                                 len(st.session_state["elm_imgs"]) - 1,
+                                 len(st.session_state["elm_imgs"]) - 1)
+    else:
+        slider_index = 0
+    run = st.button("Run")
+    do_load = st.button("Load")
+    do_save = st.button("Save")
+    do_recenter = st.button("Re-center")
+
+if run:
+    run_elm(api_key, init_step, mutate_step, batch_size)
+
+if do_load:
+    load(api_key)
+
+if do_save:
+    save()
+
+if do_recenter:
+    recenter()
+
+with col2:
+    assert st.session_state["x_start"] + WIDTH < len(typologies)
+    clicked = st_grid(
+        [img_process(image_to_byte_array(img.convert('RGB'))) for img in st.session_state["elm_imgs"][slider_index]],
+        titles=[f"Image #{str(i)}" for i in range(len(st.session_state["elm_imgs"][slider_index]))],
+        div_style={"justify-content": "center", "width": "650px", "overflow": "auto"},
+        table_style={"justify-content": "center", "width": "100%"},
+        img_style={"cursor": "pointer"},
+        num_cols=WIDTH,
+        col_labels=typologies[st.session_state["x_start"] : st.session_state["x_start"] + WIDTH],
+        row_labels=["{:.2f}".format(i * Y_STEP + st.session_state["y_start"]) for i in range(HEIGHT)],
+        selected=int(st.session_state.get("last_clicked", -1)),
+    )
+
+st.write(st.session_state["session_id"])
+
+
+if clicked != "" and clicked != -1:
+    st.session_state["last_clicked"] = int(clicked)
+    st.experimental_rerun()
+
+with open(session_loc, "wb") as f:
+    pickle.dump({k: st.session_state[k] for k in ["elm_obj", "elm_imgs"]}, f)
+    print(f"Session {st.session_state['session_id']} for ELM pictures saved")
