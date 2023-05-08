@@ -10,6 +10,11 @@ from openelm.environments import ENVS_DICT
 ARG_DICT = {"architext": architext_init_args}
 
 
+# TODO: Add in a few features for MapElites class. Eventually they need to be moved to OpenELM.
+class MyMAPElites(MAPElites):
+    pass
+
+
 class ArchitextELM:
     def __init__(self, cfg, model_cls=None, env_args: dict = None) -> None:
         """
@@ -33,7 +38,7 @@ class ArchitextELM:
             self.mutate_model = None
 
         self.environment = ENVS_DICT[self.cfg.env_name](**env_args)
-        self.map_elites = MAPElites(
+        self.map_elites = MyMAPElites(
             self.environment,
             map_grid_size=(self.cfg.behavior_n_bins,),
             save_history=True,

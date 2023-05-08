@@ -47,7 +47,11 @@ def get_blank_grid():
 typologies = ["1b1b", "2b1b", "2b2b", "3b1b", "3b2b", "3b3b", "4b1b", "4b2b", "4b3b", "4b4b"]
 
 # Initialize variables and state variables
-cfg = OmegaConf.load("config/architext_gpt3.5_cfg.yaml")
+try:
+    cfg = OmegaConf.load("config/architext_gpt3.5_cfg.yaml")
+except:
+    cfg = OmegaConf.load("architext_openelm/config/architext_gpt3.5_cfg.yaml")
+
 WIDTH, HEIGHT, Y_STEP = 5, 5, 0.1
 st.session_state.setdefault("x_start", 0)
 st.session_state.setdefault("y_start", 1.0)
