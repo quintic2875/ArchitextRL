@@ -1,0 +1,16 @@
+name: architext
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - nodejs
+  - box2d-py
+  - swig
+  - shapely
+  - networkx
+  - Pillow
+  - openai
+  - pip:
+    - "git+https://github.com/CarperAI/OpenELM.git"
