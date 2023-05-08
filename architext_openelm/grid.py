@@ -27,11 +27,13 @@ else:
         #subprocess.run(["sudo", "apt", "install", "npm"], cwd=str(app_base_folder / "frontend"))
         subprocess.run(["curl", "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh", "--output", "i.sh"],
                        cwd=str(app_base_folder / "frontend"))
-        subprocess.run(["bash", "i.sh"], cwd=str(app_base_folder / "frontend"))
-        subprocess.run(["source", "~/.nvm/nvm.sh"], cwd=str(app_base_folder / "frontend"))
-        subprocess.run(["nvm", "install", "node"], cwd="~/.nvm")
-        subprocess.run(["npm", "install"], cwd=str(app_base_folder / "frontend"))
-        subprocess.run(["npm", "run", "build"], cwd=str(app_base_folder / "frontend"))
+        subprocess.run(["sh", "i.sh"], cwd=str(app_base_folder / "frontend"))
+        #subprocess.run(["source", "~/.nvm/nvm.sh"], cwd=str(app_base_folder / "frontend"))
+        #subprocess.run(["export", "NVM_DIR=\"$HOME/.nvm\""], cwd=str(app_base_folder / "frontend"))
+
+        subprocess.run(["nvm", "install", "node"], cwd="~/.nvm", shell=True)
+        subprocess.run(["npm", "install"], cwd=str(app_base_folder / "frontend"), shell=True)
+        subprocess.run(["npm", "run", "build"], cwd=str(app_base_folder / "frontend"), shell=True)
 
     _component_func = components.declare_component(
         "st_grid", path=build_dir
