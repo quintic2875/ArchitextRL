@@ -1,5 +1,6 @@
 import pathlib
 import random
+import subprocess
 
 import streamlit as st
 from PIL import Image
@@ -51,6 +52,14 @@ try:
     cfg = OmegaConf.load("config/architext_gpt3.5_cfg.yaml")
 except:
     cfg = OmegaConf.load("architext_openelm/config/architext_gpt3.5_cfg.yaml")
+
+# Get the folder of the current file
+app_base_folder = pathlib.Path(__file__).parent
+# If frontend/build does not exist, run `npm run build`
+if not app_base_folder.joinpath("frontend/build").exists():
+    subprocess.run(["npm", "install"], cwd=str(app_base_folder / "frontend"))
+    subprocess.run(["npm", "run", "build"], cwd=str(app_base_folder / "frontend"))
+
 
 WIDTH, HEIGHT, Y_STEP = 5, 5, 0.1
 st.session_state.setdefault("x_start", 0)
@@ -127,7 +136,6 @@ def load(api_key):
 
 def recenter():
     last_clicked = st.session_state.get("last_clicked", -1)
-    print(last_clicked)
     if last_clicked < 0 or last_clicked >= WIDTH * HEIGHT:
         return
 
