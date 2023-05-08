@@ -28,7 +28,8 @@ else:
         subprocess.run(["curl", "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh", "--output", "i.sh"],
                        cwd=str(app_base_folder / "frontend"))
         subprocess.run(["bash", "i.sh"], cwd=str(app_base_folder / "frontend"))
-        subprocess.run(["nvm", "install", "node"], cwd=str(app_base_folder / "frontend"))
+        subprocess.run(["source", "~/.nvm/nvm.sh"], cwd=str(app_base_folder / "frontend"))
+        subprocess.run(["nvm", "install", "node"], cwd="~/.nvm")
         subprocess.run(["npm", "install"], cwd=str(app_base_folder / "frontend"))
         subprocess.run(["npm", "run", "build"], cwd=str(app_base_folder / "frontend"))
 
