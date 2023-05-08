@@ -1,6 +1,7 @@
 import pathlib
 import random
 import subprocess
+import numpy as np
 
 import streamlit as st
 from PIL import Image
@@ -82,6 +83,9 @@ def run_elm(api_key: str, init_step: float, mutate_step: float, batch_size: floa
     os.environ["OPENAI_API_KEY"] = api_key
 
     if st.session_state["elm_obj"] is None:
+        behavior_mode = {'genotype_ndim': 2,
+                         'genotype_space': np.array([[0, 5], [0, 10]]).T
+                         }
         st.session_state["elm_obj"] = ArchitextELM(cfg)
     elm_obj = st.session_state["elm_obj"]
 

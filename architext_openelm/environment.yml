@@ -6,7 +6,15 @@ channels:
 dependencies:
   - python=3.10
   - pip
-  - box2d-py
-  - pip:
-    - "-r requirements.txt"
   - nodejs
+  - box2d-py
+  - pytorch
+  - shapely
+  - numpy
+  - networkx
+  - transformers
+  - hydra-core
+  - Pillow
+  - openai
+  - pip:
+    - "git+https://github.com/CarperAI/OpenELM.git"
