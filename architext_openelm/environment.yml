@@ -6,13 +6,5 @@ channels:
 dependencies:
   - python=3.10
   - pip:
-    - "--editable=git+https://github.com/CarperAI/OpenELM.git"
-  - pytorch
-  - shapely
-  - numpy
-  - networkx
-  - transformers
-  - hydra-core
-  - Pillow
-  - openai
+    - "-r requirements.txt"
   - nodejs
