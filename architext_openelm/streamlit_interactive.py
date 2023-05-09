@@ -97,8 +97,6 @@ def get_elm_obj(old_elm_obj=None):
                      }
 
     elm_obj = ArchitextELM(cfg, behavior_mode=behavior_mode)
-    print("aaaa")
-    print(elm_obj.map_elites.genomes.dims)
     if old_elm_obj is not None:
         elm_obj.map_elites.import_genomes(old_elm_obj.map_elites.export_genomes())
 
@@ -115,10 +113,12 @@ def run_elm(api_key: str, init_step: float, mutate_step: float, batch_size: floa
     update_elm_obj(elm_obj, init_step=init_step, mutate_step=mutate_step, batch_size=batch_size)
     elm_obj.run()
 
-    if "elm_imgs" in st.session_state:
-        st.session_state["elm_imgs"].append(get_imgs(elm_obj.map_elites.genomes))
-    else:
-        st.session_state["elm_imgs"] = [get_imgs(elm_obj.map_elites.genomes)]
+    #if "elm_imgs" in st.session_state:
+    #    st.session_state["elm_imgs"] = [get_imgs(elm_obj.map_elites.genomes)]
+    #else:
+    #    st.session_state["elm_imgs"] = [get_imgs(elm_obj.map_elites.genomes)]
+
+    st.session_state["elm_imgs"] = [get_imgs(elm_obj.map_elites.genomes)]
 
 
 def save():
@@ -189,12 +189,14 @@ with col1:
     init_step = st.number_input("Init Step", value=1)
     mutate_step = st.number_input("Mutate Step", value=1)
     batch_size = st.number_input("Batch Size", value=2)
-    if len(st.session_state["elm_imgs"]) > 1:
-        slider_index = st.slider("Step", 0,
-                                 len(st.session_state["elm_imgs"]) - 1,
-                                 len(st.session_state["elm_imgs"]) - 1)
-    else:
-        slider_index = 0
+
+    #if len(st.session_state["elm_imgs"]) > 1:
+    #    slider_index = st.slider("Step", 0,
+    #                             len(st.session_state["elm_imgs"]) - 1,
+    #                             len(st.session_state["elm_imgs"]) - 1)
+    #else:
+    #    slider_index = 0
+
     run = st.button("Run")
     do_load = st.button("Load")
     do_save = st.button("Save")
@@ -215,8 +217,8 @@ if do_recenter:
 with col2:
     assert st.session_state["x_start"] + WIDTH <= len(typologies)
     clicked = st_grid(
-        [img_process(image_to_byte_array(img.convert('RGB'))) for img in st.session_state["elm_imgs"][slider_index]],
-        titles=[f"Image #{str(i)}" for i in range(len(st.session_state["elm_imgs"][slider_index]))],
+        [img_process(image_to_byte_array(img.convert('RGB'))) for img in st.session_state["elm_imgs"][0]],
+        titles=[f"Image #{str(i)}" for i in range(len(st.session_state["elm_imgs"][0]))],
         div_style={"justify-content": "center", "width": "650px", "overflow": "auto"},
         table_style={"justify-content": "center", "width": "100%"},
         img_style={"cursor": "pointer"},
@@ -231,7 +233,10 @@ if "elm_obj" in st.session_state and st.session_state["elm_obj"] is not None:
     st.write(f"Niches filled: {st.session_state['elm_obj'].map_elites.fitnesses.niches_filled}")
     st.write(f"Objects in recycle queue: {sum(obj is not None for obj in st.session_state['elm_obj'].map_elites.recycled)}")
     st.write(f"Max fitness: {st.session_state['elm_obj'].map_elites.fitnesses.maximum}")
-
+if "prompt_tokens" in st.session_state:
+    st.write(f"Prompt Tokens: {st.session_state['prompt_tokens']}")
+if "tokens" in st.session_state:
+    st.write(f"Total Tokens: {st.session_state['tokens']}")
 
 if clicked != "" and clicked != -1:
     st.session_state["last_clicked"] = int(clicked)
