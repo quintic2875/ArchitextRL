@@ -171,9 +171,9 @@ class ArchitextChatGPTMutation(PromptModel):
         if self.count_tokens:
             for usage in usages:
                 streamlit.session_state["prompt_tokens"] = \
-                    streamlit.session_state.get("prompt_tokens", 0) + usage["prompt_tokens"]
+                    streamlit.session_state.get("prompt_tokens", 0) + usage.get("prompt_tokens", 0)
                 streamlit.session_state["tokens"] = \
-                    streamlit.session_state.get("tokens", 0) + usage["total_tokens"]
+                    streamlit.session_state.get("tokens", 0) + usage.get("total_tokens", 0)
 
         self._log_returns(mutated_json)
 
