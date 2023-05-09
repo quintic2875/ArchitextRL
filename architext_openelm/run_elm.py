@@ -9,6 +9,8 @@ from openelm.map_elites import MAPElites, Phenotype, MapIndex, Map
 from architext_env import Architext, architext_init_args
 from openelm.environments import ENVS_DICT
 
+from util import save_folder
+
 ARG_DICT = {"architext": architext_init_args}
 
 
@@ -150,13 +152,13 @@ class ArchitextELM:
             )
             if save_each_epochs:
                 # Histories are reset every time when `.search` is called. We have to dump and merge it.
-                with open(f'recycled.pkl', 'wb') as f:
+                with open(str(save_folder / f'recycled.pkl'), 'wb') as f:
                     pickle.dump(self.map_elites.recycled, f)
                 if suffix:
                     suffix = "_" + suffix
-                with open(f'map{suffix}.pkl', 'wb') as f:
+                with open(str(save_folder / f'map{suffix}.pkl'), 'wb') as f:
                     pickle.dump(self.map_elites.genomes, f)
-                with open(f'history.pkl', 'wb') as f:
+                with open(str(save_folder / f'history.pkl'), 'wb') as f:
                     pickle.dump(self.map_elites.history, f)
 
             self.cfg.evo_init_steps = evo_init_step_scheduler(i+1)

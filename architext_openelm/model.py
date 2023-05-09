@@ -17,6 +17,7 @@ from openelm.mutation_model import PromptModel
 
 from architext_genotype import ArchitextGenotype
 from concurrent.futures import ThreadPoolExecutor
+from util import base_folder
 
 max_json = re.compile(r"\{[\d\D]*\}")
 
@@ -249,11 +250,11 @@ def build_default_mutation_model(key: str, cfg: DictConfig):
     Returns:
         MutationModel: A mutation model.
     """
-    with open('prompts.txt', 'r') as f:
+    with open(str(base_folder / 'prompts.txt'), 'r') as f:
         prompts = [p.strip() for p in f.read().split('\n') if p.strip()]
     aug_prompts = ['[prompt] ' + prompt.rstrip() + ' [layout]' for prompt in prompts]
 
-    with open("seed_designs.json", "r") as f:
+    with open(str(base_folder / "seed_designs.json"), "r") as f:
         seed_designs = json.load(f)
 
     if key == "gpt-j":

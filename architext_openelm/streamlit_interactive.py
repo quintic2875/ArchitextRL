@@ -14,7 +14,7 @@ import pickle
 from omegaconf import OmegaConf
 
 from run_elm import ArchitextELM
-
+from util import save_folder
 
 def img_process(img_bytes):
     encoded_img = base64.b64encode(img_bytes).decode()
@@ -126,21 +126,21 @@ def save():
         return
     elm_obj = st.session_state["elm_obj"]
 
-    with open(f'recycled.pkl', 'wb') as f:
+    with open(str(save_folder / f'recycled.pkl'), 'wb') as f:
         pickle.dump(elm_obj.map_elites.recycled, f)
-    with open(f'map.pkl', 'wb') as f:
+    with open(str(save_folder / f'map.pkl'), 'wb') as f:
         pickle.dump(elm_obj.map_elites.genomes, f)
-    with open(f'history.pkl', 'wb') as f:
+    with open(str(save_folder / f'history.pkl'), 'wb') as f:
         pickle.dump(elm_obj.map_elites.history, f)
 
 
 def load(api_key):
     os.environ["OPENAI_API_KEY"] = api_key
-    with open(f'recycled.pkl', 'rb') as f:
+    with open(str(save_folder / f'recycled.pkl'), 'rb') as f:
         recycled = pickle.load(f)
-    with open(f'map.pkl', 'rb') as f:
+    with open(str(save_folder / f'map.pkl'), 'rb') as f:
         genomes = pickle.load(f)
-    with open(f'history.pkl', 'rb') as f:
+    with open(str(save_folder / f'history.pkl'), 'rb') as f:
         history = pickle.load(f)
     print(genomes.dims)
 
