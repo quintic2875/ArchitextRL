@@ -56,6 +56,9 @@ except:
 
 
 WIDTH, HEIGHT, Y_STEP = 5, 5, 0.1
+# todo: multiple dims for map?
+cfg.behavior_n_bins = WIDTH
+
 st.session_state.setdefault("x_start", 0)
 st.session_state.setdefault("y_start", 1.0)
 st.session_state.setdefault("session_id",
@@ -75,25 +78,43 @@ if os.path.exists(session_loc):
         st.session_state.update(loaded_state)
 
 
-def run_elm(api_key: str, init_step: float, mutate_step: float, batch_size: float):
+def update_elm_obj(elm_obj, init_step, mutate_step, batch_size):
     init_step = int(init_step)
     mutate_step = int(mutate_step)
     batch_size = int(batch_size)
-
-    os.environ["OPENAI_API_KEY"] = api_key
-
-    if st.session_state["elm_obj"] is None:
-        behavior_mode = {'genotype_ndim': 2,
-                         'genotype_space': np.array([[0, 5], [0, 10]]).T
-                         }
-        st.session_state["elm_obj"] = ArchitextELM(cfg)
-    elm_obj = st.session_state["elm_obj"]
 
     elm_obj.cfg.evo_init_steps = init_step
     elm_obj.cfg.evo_n_steps = init_step + mutate_step
     elm_obj.environment.batch_size = batch_size
     elm_obj.map_elites.env.batch_size = batch_size
+
+
+def get_elm_obj(old_elm_obj=None):
+    x_start = st.session_state["x_start"]
+    y_start = st.session_state["y_start"]
+    behavior_mode = {'genotype_ndim': 2,
+                     'genotype_space': np.array([[y_start, y_start + HEIGHT * Y_STEP], [x_start, x_start + WIDTH]]).T
+                     }
+
+    elm_obj = ArchitextELM(cfg, behavior_mode=behavior_mode)
+    print("aaaa")
+    print(elm_obj.map_elites.genomes.dims)
+    if old_elm_obj is not None:
+        elm_obj.map_elites.import_genomes(old_elm_obj.map_elites.export_genomes())
+
+    return elm_obj
+
+
+def run_elm(api_key: str, init_step: float, mutate_step: float, batch_size: float):
+    os.environ["OPENAI_API_KEY"] = api_key
+
+    if st.session_state["elm_obj"] is None:
+        st.session_state["elm_obj"] = get_elm_obj()
+
+    elm_obj = st.session_state["elm_obj"]
+    update_elm_obj(elm_obj, init_step=init_step, mutate_step=mutate_step, batch_size=batch_size)
     elm_obj.run()
+
     if "elm_imgs" in st.session_state:
         st.session_state["elm_imgs"].append(get_imgs(elm_obj.map_elites.genomes))
     else:
@@ -104,6 +125,7 @@ def save():
     if st.session_state["elm_obj"] is None:
         return
     elm_obj = st.session_state["elm_obj"]
+
     with open(f'recycled.pkl', 'wb') as f:
         pickle.dump(elm_obj.map_elites.recycled, f)
     with open(f'map.pkl', 'wb') as f:
@@ -120,12 +142,17 @@ def load(api_key):
         genomes = pickle.load(f)
     with open(f'history.pkl', 'rb') as f:
         history = pickle.load(f)
+    print(genomes.dims)
+
+    if genomes.dims != (WIDTH, HEIGHT):
+        print(f"Map size mismatch. Got {genomes.dims} != {(WIDTH, HEIGHT)}")
+        return
+
     st.session_state["elm_obj"] = ArchitextELM(cfg)
 
     elm_obj = st.session_state["elm_obj"]
-    elm_obj.map_elites.recycled = recycled
-    elm_obj.map_elites.genomes = genomes
-    # todo: populate the nonzero attribute
+
+    elm_obj.map_elites.load_maps(genomes=genomes, recycled=recycled)
     elm_obj.map_elites.history = history
 
     st.session_state["elm_imgs"] = [get_imgs(elm_obj.map_elites.genomes)]
@@ -149,6 +176,9 @@ def recenter():
     st.session_state["y_start"] = new_y_start
 
     st.session_state["last_clicked"] = new_y * WIDTH + new_x
+
+    st.session_state["elm_obj"] = get_elm_obj(st.session_state["elm_obj"])
+    st.session_state["elm_imgs"] = [get_imgs(st.session_state["elm_obj"].map_elites.genomes)]
 
 
 st.set_page_config(layout="wide")
@@ -183,7 +213,7 @@ if do_recenter:
     recenter()
 
 with col2:
-    assert st.session_state["x_start"] + WIDTH < len(typologies)
+    assert st.session_state["x_start"] + WIDTH <= len(typologies)
     clicked = st_grid(
         [img_process(image_to_byte_array(img.convert('RGB'))) for img in st.session_state["elm_imgs"][slider_index]],
         titles=[f"Image #{str(i)}" for i in range(len(st.session_state["elm_imgs"][slider_index]))],
@@ -196,7 +226,11 @@ with col2:
         selected=int(st.session_state.get("last_clicked", -1)),
     )
 
-st.write(st.session_state["session_id"])
+st.write("session id: " + st.session_state["session_id"])
+if "elm_obj" in st.session_state and st.session_state["elm_obj"] is not None:
+    st.write(f"Niches filled: {st.session_state['elm_obj'].map_elites.fitnesses.niches_filled}")
+    st.write(f"Objects in recycle queue: {sum(obj is not None for obj in st.session_state['elm_obj'].map_elites.recycled)}")
+    st.write(f"Max fitness: {st.session_state['elm_obj'].map_elites.fitnesses.maximum}")
 
 
 if clicked != "" and clicked != -1:

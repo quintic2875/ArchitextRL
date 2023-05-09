@@ -23,13 +23,9 @@ else:
     app_base_folder = pathlib.Path(__file__).parent
     # If frontend/build does not exist, run `npm run build`
     if not app_base_folder.joinpath("frontend/build").exists():
-        #subprocess.run(["sudo", "apt", "install", "nodejs"], cwd=str(app_base_folder / "frontend"))
-        #subprocess.run(["sudo", "apt", "install", "npm"], cwd=str(app_base_folder / "frontend"))
         subprocess.run(["curl", "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh", "--output", "i.sh"],
                        cwd=str(app_base_folder / "frontend"))
         subprocess.run(["bash", "i.sh"], cwd=str(app_base_folder / "frontend"))
-        #subprocess.run(["source", "~/.nvm/nvm.sh"], cwd=str(app_base_folder / "frontend"))
-        #subprocess.run(["export", "NVM_DIR=\"$HOME/.nvm\""], cwd=str(app_base_folder / "frontend"))
         subprocess.Popen(["bash", "build.sh"], cwd=str(app_base_folder))
 
     _component_func = components.declare_component(
