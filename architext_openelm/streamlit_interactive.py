@@ -1,3 +1,4 @@
+import json
 import pathlib
 import random
 import subprocess
@@ -237,6 +238,12 @@ if "prompt_tokens" in st.session_state:
     st.write(f"Prompt Tokens: {st.session_state['prompt_tokens']}")
 if "tokens" in st.session_state:
     st.write(f"Total Tokens: {st.session_state['tokens']}")
+if "last_clicked" in st.session_state and st.session_state["last_clicked"] != -1:
+    last_x = st.session_state["last_clicked"] % WIDTH
+    last_y = st.session_state["last_clicked"] // WIDTH
+    genome = st.session_state["elm_obj"].map_elites.genomes[(last_y, last_x)]
+    if genome != 0.0:
+        st.json(genome.design_json)
 
 if clicked != "" and clicked != -1:
     st.session_state["last_clicked"] = int(clicked)

@@ -211,20 +211,21 @@ class ArchitextChatGPTMutation(PromptModel):
         """
         example, prompt = args
 
-        requirements = "1. The design should follow the description given by the prompt.\n" \
-                       "2. There should not be any overlapping rooms.\n" \
-                       "3. The room names should start with one of 'living_room', ''kitchen', 'bedroom', 'bathroom', " \
+        requirements = "1. the design detailed in `layout` must follow the prompt as "\
+                       "closely as possible.\n" \
+                       "2. Rooms cannot overlap.\n" \
+                       "3. The room names should start with one of 'living_room', 'kitchen', 'bedroom', 'bathroom', " \
                        "'corridor'.\n" \
-                       "4. There are no more than 4 bedrooms.\n" \
-                       "5. There are fewer bathrooms than bedrooms.\n" \
-                       "6. Only return the JSON document without any extra words.\n"
-        sys_msg = "You are serving clients by receiving a prompt describing a floor plan, and returning a JSON " \
-                  "document containing the original input prompt, and the details of the floor plan. "\
+                       "4. Number of bathroom <= Number of bedroom <= 4.\n" \
+                       "5. You only return valid JSON documents without extra words.\n"
+        sys_msg = "You are a REST API server receiving prompts describing a floor plan. You return JSON " \
+                  "documents strictly containing\n"\
+                  "1. `prompt`: the original input prompt, \n"\
+                  "2. `layout`: the room-by-room details of the floor plan in terms of the coordinates.\n"\
                   "An example is the following:\n" \
                   "```\n" + str(example) + "\n```\n" \
-                  "The `prompt` field is the original prompt. " \
-                  "In the `layout` field, each room is represented as a list of coordinates defining a polygon. " \
-                  "For each prompt coming from the user, return a JSON document like the above which satisfies " \
+                  "In the `layout` field, each room is represented as a list of coordinates defining a polygon.\n" \
+                  "The returned JSON document must satisfy " \
                   "the following requirements:\n" + requirements
         for i in range(5):
             try:
