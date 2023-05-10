@@ -68,6 +68,7 @@ st.session_state.setdefault("elm_imgs",
                             [get_blank_grid()]
                             )
 st.session_state.setdefault("elm_obj", None)
+st.session_state.setdefault("last_msg", "")
 
 # create folder sessions/ if not exist
 if not os.path.exists("sessions"):
@@ -137,13 +138,17 @@ def save():
 
 def load(api_key):
     os.environ["OPENAI_API_KEY"] = api_key
-    with open(str(save_folder / f'recycled.pkl'), 'rb') as f:
-        recycled = pickle.load(f)
-    with open(str(save_folder / f'map.pkl'), 'rb') as f:
-        genomes = pickle.load(f)
-    with open(str(save_folder / f'history.pkl'), 'rb') as f:
-        history = pickle.load(f)
-    print(genomes.dims)
+    try:
+        with open(str(save_folder / f'recycled.pkl'), 'rb') as f:
+            recycled = pickle.load(f)
+        with open(str(save_folder / f'map.pkl'), 'rb') as f:
+            genomes = pickle.load(f)
+        with open(str(save_folder / f'history.pkl'), 'rb') as f:
+            history = pickle.load(f)
+    except Exception as e:
+        st.session_state["last_msg"] = f"Error reading the files. Error message: {str(e)}"
+        return
+
 
     if genomes.dims != (WIDTH, HEIGHT):
         print(f"Map size mismatch. Got {genomes.dims} != {(WIDTH, HEIGHT)}")
@@ -229,21 +234,27 @@ with col2:
         selected=int(st.session_state.get("last_clicked", -1)),
     )
 
+if "last_msg" in st.session_state:
+    st.write(st.session_state["last_msg"])
+
 st.write("session id: " + st.session_state["session_id"])
-if "elm_obj" in st.session_state and st.session_state["elm_obj"] is not None:
-    st.write(f"Niches filled: {st.session_state['elm_obj'].map_elites.fitnesses.niches_filled}")
-    st.write(f"Objects in recycle queue: {sum(obj is not None for obj in st.session_state['elm_obj'].map_elites.recycled)}")
-    st.write(f"Max fitness: {st.session_state['elm_obj'].map_elites.fitnesses.maximum}")
+
 if "prompt_tokens" in st.session_state:
     st.write(f"Prompt Tokens: {st.session_state['prompt_tokens']}")
 if "tokens" in st.session_state:
     st.write(f"Total Tokens: {st.session_state['tokens']}")
-if "last_clicked" in st.session_state and st.session_state["last_clicked"] != -1:
-    last_x = st.session_state["last_clicked"] % WIDTH
-    last_y = st.session_state["last_clicked"] // WIDTH
-    genome = st.session_state["elm_obj"].map_elites.genomes[(last_y, last_x)]
-    if genome != 0.0:
-        st.json(genome.design_json)
+
+if "elm_obj" in st.session_state and st.session_state["elm_obj"] is not None:
+    st.write(f"Niches filled: {st.session_state['elm_obj'].map_elites.fitnesses.niches_filled}")
+    st.write(f"Objects in recycle queue: {sum(obj is not None for obj in st.session_state['elm_obj'].map_elites.recycled)}")
+    st.write(f"Max fitness: {st.session_state['elm_obj'].map_elites.fitnesses.maximum}")
+
+    if "last_clicked" in st.session_state and st.session_state["last_clicked"] != -1:
+        last_x = st.session_state["last_clicked"] % WIDTH
+        last_y = st.session_state["last_clicked"] // WIDTH
+        genome = st.session_state["elm_obj"].map_elites.genomes[(last_y, last_x)]
+        if genome != 0.0:
+            st.json(genome.design_json)
 
 if clicked != "" and clicked != -1:
     st.session_state["last_clicked"] = int(clicked)
